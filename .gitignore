@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+.idea
+.vscode
+coverage/
+yarn.lock
+build/
+.env
+
+
+thegraph/subgraph.yaml
