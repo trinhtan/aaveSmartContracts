@@ -3,6 +3,7 @@ require('dotenv').config();
 var HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
+  contracts_directory: './contracts/useFlashLoan',
   networks: {
     development: {
       host: '127.0.0.1',

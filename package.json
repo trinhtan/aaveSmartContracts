@@ -6,7 +6,7 @@
   "author": "trinhtan <lop12a1trinhvantan@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "npx truffle test test2/lendingPool.test.js"
+    "flashLoan": "npx truffle exec scripts/flashLoan.js"
   },
   "dependencies": {
     "@openzeppelin/contracts": "2.5.0",
