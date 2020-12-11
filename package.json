@@ -6,7 +6,8 @@
   "author": "trinhtan <lop12a1trinhvantan@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "flashLoan": "npx truffle exec scripts/flashLoan.js"
+    "flashLoan": "npx truffle exec scripts/flashLoan.js",
+    "saddle-test": "npx saddle test saddle-tests/ContractTest.js"
   },
   "dependencies": {
     "@openzeppelin/contracts": "2.5.0",
@@ -16,6 +17,7 @@
     "bignumber.js": "^9.0.1",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
+    "eth-saddle": "^0.1.21",
     "openzeppelin-solidity": "2.5.0",
     "solc": "^0.5.0",
     "truffle": "5.1.46",

@@ -1,19 +1,18 @@
 pragma solidity ^0.5.0;
-// import "../../configuration/LendingPoolAddressesProvider.sol";
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "../../openzeppelin-solidity/SafeMath.sol";
+import "../../openzeppelin-solidity/SafeERC20.sol";
+import "../../openzeppelin-solidity/ERC20.sol";
+import "../../openzeppelin-solidity/Address.sol";
 import "../../libraries/openzeppelin-upgradeability/VersionedInitializable.sol";
 
 import "../../libraries/CoreLibrary.sol";
+import "../../configuration/LendingPoolAddressesProvider.sol";
 import "../../interfaces/ILendingRateOracle.sol";
 import "../../interfaces/IReserveInterestRateStrategy.sol";
 import "../../libraries/WadRayMath.sol";
 
 import "../../lendingpool/LendingPoolCore.sol";
-import "../../interfaces/ILendingPoolAddressesProvider.sol";
 
 /*************************************************************************************
 * @title MockLendingPoolCore contract
@@ -31,8 +30,8 @@ contract MockLendingPoolCore is LendingPoolCore {
         return CORE_REVISION;
     }
 
-    function initialize(address _addressesProvider) public initializer {
-        addressesProvider = ILendingPoolAddressesProvider(_addressesProvider);
+    function initialize(LendingPoolAddressesProvider _addressesProvider) public initializer {
+        addressesProvider = _addressesProvider;
         refreshConfigInternal();
     }
 

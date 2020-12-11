@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../openzeppelin-solidity/SafeMath.sol";
 
 import "../../flashloan/base/FlashLoanReceiverBase.sol";
 import "../tokens/MintableERC20.sol";

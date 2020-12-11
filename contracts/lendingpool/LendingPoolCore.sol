@@ -1,23 +1,18 @@
 pragma solidity ^0.5.0;
 
-// import "../configuration/LendingPoolAddressesProvider.sol";
-// import "../tokenization/AToken.sol";
-
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-
+import "../openzeppelin-solidity/SafeMath.sol";
+import "../openzeppelin-solidity/SafeERC20.sol";
+import "../openzeppelin-solidity/ERC20.sol";
+import "../openzeppelin-solidity/Address.sol";
 import "../libraries/openzeppelin-upgradeability/VersionedInitializable.sol";
-import "../libraries/CoreLibrary.sol";
-import "../libraries/WadRayMath.sol";
-import "../libraries/EthAddressLib.sol";
-import "../libraries/InterestRateMode.sol";
 
-import "../interfaces/ILendingPoolAddressesProvider.sol";
-import "../interfaces/IAToken.sol";
+import "../libraries/CoreLibrary.sol";
+import "../configuration/LendingPoolAddressesProvider.sol";
 import "../interfaces/ILendingRateOracle.sol";
 import "../interfaces/IReserveInterestRateStrategy.sol";
+import "../libraries/WadRayMath.sol";
+import "../tokenization/AToken.sol";
+import "../libraries/EthAddressLib.sol";
 
 /**
 * @title LendingPoolCore contract
@@ -56,7 +51,7 @@ contract LendingPoolCore is VersionedInitializable {
 
     address public lendingPoolAddress;
 
-    ILendingPoolAddressesProvider public addressesProvider;
+    LendingPoolAddressesProvider public addressesProvider;
 
     /**
     * @dev only lending pools can use functions affected by this modifier
@@ -96,8 +91,8 @@ contract LendingPoolCore is VersionedInitializable {
     * @param _addressesProvider the addressesProvider contract
     **/
 
-    function initialize(address _addressesProvider) public initializer {
-        addressesProvider = ILendingPoolAddressesProvider(_addressesProvider);
+    function initialize(LendingPoolAddressesProvider _addressesProvider) public initializer {
+        addressesProvider = _addressesProvider;
         refreshConfigInternal();
     }
 
@@ -188,7 +183,7 @@ contract LendingPoolCore is VersionedInitializable {
         address _user,
         uint256 _amountBorrowed,
         uint256 _borrowFee,
-        InterestRateMode.Mode _rateMode
+        CoreLibrary.InterestRateMode _rateMode
     ) external onlyLendingPool returns (uint256, uint256) {
         // getting the previous borrow data of the user
         (uint256 principalBorrowBalance, , uint256 balanceIncrease) = getUserBorrowBalances(
@@ -270,8 +265,8 @@ contract LendingPoolCore is VersionedInitializable {
         uint256 _principalBorrowBalance,
         uint256 _compoundedBorrowBalance,
         uint256 _balanceIncrease,
-        InterestRateMode.Mode _currentRateMode
-    ) external onlyLendingPool returns (InterestRateMode.Mode, uint256) {
+        CoreLibrary.InterestRateMode _currentRateMode
+    ) external onlyLendingPool returns (CoreLibrary.InterestRateMode, uint256) {
         updateReserveStateOnSwapRateInternal(
             _reserve,
             _user,
@@ -280,7 +275,7 @@ contract LendingPoolCore is VersionedInitializable {
             _currentRateMode
         );
 
-        InterestRateMode.Mode newRateMode = updateUserStateOnSwapRateInternal(
+        CoreLibrary.InterestRateMode newRateMode = updateUserStateOnSwapRateInternal(
             _reserve,
             _user,
             _balanceIncrease,
@@ -565,7 +560,7 @@ contract LendingPoolCore is VersionedInitializable {
         view
         returns (uint256)
     {
-        IAToken aToken = IAToken(reserves[_reserve].aTokenAddress);
+        AToken aToken = AToken(reserves[_reserve].aTokenAddress);
         return aToken.balanceOf(_user);
 
     }
@@ -931,18 +926,18 @@ contract LendingPoolCore is VersionedInitializable {
     function getUserCurrentBorrowRateMode(address _reserve, address _user)
         public
         view
-        returns (InterestRateMode.Mode)
+        returns (CoreLibrary.InterestRateMode)
     {
         CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
 
         if (user.principalBorrowBalance == 0) {
-            return InterestRateMode.Mode.NONE;
+            return CoreLibrary.InterestRateMode.NONE;
         }
 
         return
             user.stableBorrowRate > 0
-            ? InterestRateMode.Mode.STABLE
-            : InterestRateMode.Mode.VARIABLE;
+            ? CoreLibrary.InterestRateMode.STABLE
+            : CoreLibrary.InterestRateMode.VARIABLE;
     }
 
     /**
@@ -956,14 +951,14 @@ contract LendingPoolCore is VersionedInitializable {
         view
         returns (uint256)
     {
-        InterestRateMode.Mode rateMode = getUserCurrentBorrowRateMode(_reserve, _user);
+        CoreLibrary.InterestRateMode rateMode = getUserCurrentBorrowRateMode(_reserve, _user);
 
-        if (rateMode == InterestRateMode.Mode.NONE) {
+        if (rateMode == CoreLibrary.InterestRateMode.NONE) {
             return 0;
         }
 
         return
-            rateMode == InterestRateMode.Mode.STABLE
+            rateMode == CoreLibrary.InterestRateMode.STABLE
             ? usersReserveData[_user][_reserve].stableBorrowRate
             : reserves[_reserve].currentVariableBorrowRate;
     }
@@ -1289,7 +1284,7 @@ contract LendingPoolCore is VersionedInitializable {
         uint256 _principalBorrowBalance,
         uint256 _balanceIncrease,
         uint256 _amountBorrowed,
-        InterestRateMode.Mode _rateMode
+        CoreLibrary.InterestRateMode _rateMode
     ) internal {
         reserves[_reserve].updateCumulativeIndexes();
 
@@ -1322,17 +1317,17 @@ contract LendingPoolCore is VersionedInitializable {
         uint256 _amountBorrowed,
         uint256 _balanceIncrease,
         uint256 _fee,
-        InterestRateMode.Mode _rateMode
+        CoreLibrary.InterestRateMode _rateMode
     ) internal {
         CoreLibrary.ReserveData storage reserve = reserves[_reserve];
         CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
 
-        if (_rateMode == InterestRateMode.Mode.STABLE) {
+        if (_rateMode == CoreLibrary.InterestRateMode.STABLE) {
             //stable
             //reset the user variable index, and update the stable rate
             user.stableBorrowRate = reserve.currentStableBorrowRate;
             user.lastVariableBorrowCumulativeIndex = 0;
-        } else if (_rateMode == InterestRateMode.Mode.VARIABLE) {
+        } else if (_rateMode == CoreLibrary.InterestRateMode.VARIABLE) {
             //variable
             //reset the user stable rate, and store the new borrow index
             user.stableBorrowRate = 0;
@@ -1368,13 +1363,13 @@ contract LendingPoolCore is VersionedInitializable {
         CoreLibrary.ReserveData storage reserve = reserves[_reserve];
         CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
 
-        InterestRateMode.Mode borrowRateMode = getUserCurrentBorrowRateMode(_reserve, _user);
+        CoreLibrary.InterestRateMode borrowRateMode = getUserCurrentBorrowRateMode(_reserve, _user);
 
         //update the indexes
         reserves[_reserve].updateCumulativeIndexes();
 
         //compound the cumulated interest to the borrow balance and then subtracting the payback amount
-        if (borrowRateMode == InterestRateMode.Mode.STABLE) {
+        if (borrowRateMode == CoreLibrary.InterestRateMode.STABLE) {
             reserve.increaseTotalBorrowsStableAndUpdateAverageRate(
                 _balanceIncrease,
                 user.stableBorrowRate
@@ -1441,7 +1436,7 @@ contract LendingPoolCore is VersionedInitializable {
         address _user,
         uint256 _principalBorrowBalance,
         uint256 _compoundedBorrowBalance,
-        InterestRateMode.Mode _currentRateMode
+        CoreLibrary.InterestRateMode _currentRateMode
     ) internal {
         CoreLibrary.ReserveData storage reserve = reserves[_reserve];
         CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
@@ -1449,7 +1444,7 @@ contract LendingPoolCore is VersionedInitializable {
         //compounding reserve indexes
         reserve.updateCumulativeIndexes();
 
-        if (_currentRateMode == InterestRateMode.Mode.STABLE) {
+        if (_currentRateMode == CoreLibrary.InterestRateMode.STABLE) {
             uint256 userCurrentStableRate = user.stableBorrowRate;
 
             //swap to variable
@@ -1458,7 +1453,7 @@ contract LendingPoolCore is VersionedInitializable {
                 userCurrentStableRate
             ); //decreasing stable from old principal balance
             reserve.increaseTotalBorrowsVariable(_compoundedBorrowBalance); //increase variable borrows
-        } else if (_currentRateMode == InterestRateMode.Mode.VARIABLE) {
+        } else if (_currentRateMode == CoreLibrary.InterestRateMode.VARIABLE) {
             //swap to stable
             uint256 currentStableRate = reserve.currentStableBorrowRate;
             reserve.decreaseTotalBorrowsVariable(_principalBorrowBalance);
@@ -1484,20 +1479,20 @@ contract LendingPoolCore is VersionedInitializable {
         address _reserve,
         address _user,
         uint256 _balanceIncrease,
-        InterestRateMode.Mode _currentRateMode
-    ) internal returns (InterestRateMode.Mode) {
+        CoreLibrary.InterestRateMode _currentRateMode
+    ) internal returns (CoreLibrary.InterestRateMode) {
         CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
         CoreLibrary.ReserveData storage reserve = reserves[_reserve];
 
-        InterestRateMode.Mode newMode = InterestRateMode.Mode.NONE;
+        CoreLibrary.InterestRateMode newMode = CoreLibrary.InterestRateMode.NONE;
 
-        if (_currentRateMode == InterestRateMode.Mode.VARIABLE) {
+        if (_currentRateMode == CoreLibrary.InterestRateMode.VARIABLE) {
             //switch to stable
-            newMode = InterestRateMode.Mode.STABLE;
+            newMode = CoreLibrary.InterestRateMode.STABLE;
             user.stableBorrowRate = reserve.currentStableBorrowRate;
             user.lastVariableBorrowCumulativeIndex = 0;
-        } else if (_currentRateMode == InterestRateMode.Mode.STABLE) {
-            newMode = InterestRateMode.Mode.VARIABLE;
+        } else if (_currentRateMode == CoreLibrary.InterestRateMode.STABLE) {
+            newMode = CoreLibrary.InterestRateMode.VARIABLE;
             user.stableBorrowRate = 0;
             user.lastVariableBorrowCumulativeIndex = reserve.lastVariableBorrowCumulativeIndex;
         } else {
@@ -1531,12 +1526,12 @@ contract LendingPoolCore is VersionedInitializable {
         //update principal reserve data
         reserve.updateCumulativeIndexes();
 
-        InterestRateMode.Mode borrowRateMode = getUserCurrentBorrowRateMode(
+        CoreLibrary.InterestRateMode borrowRateMode = getUserCurrentBorrowRateMode(
             _principalReserve,
             _user
         );
 
-        if (borrowRateMode == InterestRateMode.Mode.STABLE) {
+        if (borrowRateMode == CoreLibrary.InterestRateMode.STABLE) {
             //increase the total borrows by the compounded interest
             reserve.increaseTotalBorrowsStableAndUpdateAverageRate(
                 _balanceIncrease,
@@ -1594,7 +1589,7 @@ contract LendingPoolCore is VersionedInitializable {
         );
 
         if (
-            getUserCurrentBorrowRateMode(_reserve, _user) == InterestRateMode.Mode.VARIABLE
+            getUserCurrentBorrowRateMode(_reserve, _user) == CoreLibrary.InterestRateMode.VARIABLE
         ) {
             user.lastVariableBorrowCumulativeIndex = reserve.lastVariableBorrowCumulativeIndex;
         }
@@ -1666,31 +1661,31 @@ contract LendingPoolCore is VersionedInitializable {
         uint256 _principalBalance,
         uint256 _balanceIncrease,
         uint256 _amountBorrowed,
-        InterestRateMode.Mode _newBorrowRateMode
+        CoreLibrary.InterestRateMode _newBorrowRateMode
     ) internal {
-        InterestRateMode.Mode previousRateMode = getUserCurrentBorrowRateMode(
+        CoreLibrary.InterestRateMode previousRateMode = getUserCurrentBorrowRateMode(
             _reserve,
             _user
         );
         CoreLibrary.ReserveData storage reserve = reserves[_reserve];
 
-        if (previousRateMode == InterestRateMode.Mode.STABLE) {
+        if (previousRateMode == CoreLibrary.InterestRateMode.STABLE) {
             CoreLibrary.UserReserveData storage user = usersReserveData[_user][_reserve];
             reserve.decreaseTotalBorrowsStableAndUpdateAverageRate(
                 _principalBalance,
                 user.stableBorrowRate
             );
-        } else if (previousRateMode == InterestRateMode.Mode.VARIABLE) {
+        } else if (previousRateMode == CoreLibrary.InterestRateMode.VARIABLE) {
             reserve.decreaseTotalBorrowsVariable(_principalBalance);
         }
 
         uint256 newPrincipalAmount = _principalBalance.add(_balanceIncrease).add(_amountBorrowed);
-        if (_newBorrowRateMode == InterestRateMode.Mode.STABLE) {
+        if (_newBorrowRateMode == CoreLibrary.InterestRateMode.STABLE) {
             reserve.increaseTotalBorrowsStableAndUpdateAverageRate(
                 newPrincipalAmount,
                 reserve.currentStableBorrowRate
             );
-        } else if (_newBorrowRateMode == InterestRateMode.Mode.VARIABLE) {
+        } else if (_newBorrowRateMode == CoreLibrary.InterestRateMode.VARIABLE) {
             reserve.increaseTotalBorrowsVariable(newPrincipalAmount);
         } else {
             revert("Invalid new borrow rate mode");

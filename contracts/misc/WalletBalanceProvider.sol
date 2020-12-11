@@ -1,15 +1,12 @@
 pragma solidity ^0.5.0;
 
-// import "../lendingpool/LendingPoolCore.sol";
-// import "../configuration/LendingPoolAddressesProvider.sol";
+import "../openzeppelin-solidity/Address.sol";
+import "../openzeppelin-solidity/IERC20.sol";
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "../configuration/LendingPoolAddressesProvider.sol";
+import "../lendingpool/LendingPoolCore.sol";
 import "../libraries/EthAddressLib.sol";
 
-import "../interfaces/ILendingPoolAddressesProvider.sol";
-import "../interfaces/ILendingPoolCore.sol";
 
 /**
 * @title WalletBalanceProvider contract
@@ -22,11 +19,11 @@ contract WalletBalanceProvider {
 
     using Address for address;
 
-    ILendingPoolAddressesProvider provider;
+    LendingPoolAddressesProvider provider;
 
-    constructor(address _provider) public {
+    constructor(LendingPoolAddressesProvider _provider) public {
 
-        provider = ILendingPoolAddressesProvider(_provider);
+        provider = _provider;
 
     }
     /**
@@ -57,7 +54,7 @@ contract WalletBalanceProvider {
     */
     function getUserWalletBalances(address _user) public view returns (address[] memory, uint256[] memory) {
 
-        ILendingPoolCore core = ILendingPoolCore(provider.getLendingPoolCore());
+        LendingPoolCore core = LendingPoolCore(provider.getLendingPoolCore());
 
         address[] memory reserves = core.getReserves();
 

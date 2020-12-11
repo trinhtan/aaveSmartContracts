@@ -1,14 +1,13 @@
 pragma solidity ^0.5.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "../openzeppelin-solidity/ERC20.sol";
+import "../openzeppelin-solidity/ERC20Detailed.sol";
 
+import "../configuration/LendingPoolAddressesProvider.sol";
+import "../lendingpool/LendingPool.sol";
+import "../lendingpool/LendingPoolDataProvider.sol";
+import "../lendingpool/LendingPoolCore.sol";
 import "../libraries/WadRayMath.sol";
-
-import "../interfaces/ILendingPoolAddressesProvider.sol";
-import "../interfaces/ILendingPoolCore.sol";
-import "../interfaces/ILendingPoolDataProvider.sol";
-import "../interfaces/ILendingPool.sol";
 
 /**
  * @title Aave ERC20 AToken
@@ -128,10 +127,10 @@ contract AToken is ERC20, ERC20Detailed {
     mapping (address => uint256) private redirectedBalances;
     mapping (address => address) private interestRedirectionAllowances;
 
-    ILendingPoolAddressesProvider private addressesProvider;
-    ILendingPoolCore private core;
-    ILendingPool private pool;
-    ILendingPoolDataProvider private dataProvider;
+    LendingPoolAddressesProvider private addressesProvider;
+    LendingPoolCore private core;
+    LendingPool private pool;
+    LendingPoolDataProvider private dataProvider;
 
     modifier onlyLendingPool {
         require(
@@ -147,17 +146,17 @@ contract AToken is ERC20, ERC20Detailed {
     }
 
     constructor(
-        address _addressesProvider,
+        LendingPoolAddressesProvider _addressesProvider,
         address _underlyingAsset,
         uint8 _underlyingAssetDecimals,
         string memory _name,
         string memory _symbol
     ) public ERC20Detailed(_name, _symbol, _underlyingAssetDecimals) {
 
-        addressesProvider = ILendingPoolAddressesProvider(_addressesProvider);
-        core = ILendingPoolCore(addressesProvider.getLendingPoolCore());
-        pool = ILendingPool(addressesProvider.getLendingPool());
-        dataProvider = ILendingPoolDataProvider(addressesProvider.getLendingPoolDataProvider());
+        addressesProvider = _addressesProvider;
+        core = LendingPoolCore(addressesProvider.getLendingPoolCore());
+        pool = LendingPool(addressesProvider.getLendingPool());
+        dataProvider = LendingPoolDataProvider(addressesProvider.getLendingPoolDataProvider());
         underlyingAssetAddress = _underlyingAsset;
     }
 

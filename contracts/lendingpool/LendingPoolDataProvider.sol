@@ -1,22 +1,16 @@
 pragma solidity ^0.5.0;
 
-// import "../configuration/LendingPoolAddressesProvider.sol";
-// import "./LendingPoolCore.sol";
-// import "../tokenization/AToken.sol";
-
-import "@openzeppelin/contracts/math/SafeMath.sol";
-
+import "../openzeppelin-solidity/SafeMath.sol";
 import "../libraries/openzeppelin-upgradeability/VersionedInitializable.sol";
-// import "../libraries/CoreLibrary.sol";
-import "../libraries/WadRayMath.sol";
-import "../libraries/InterestRateMode.sol";
 
+import "../libraries/CoreLibrary.sol";
+import "../configuration/LendingPoolAddressesProvider.sol";
+import "../libraries/WadRayMath.sol";
 import "../interfaces/IPriceOracleGetter.sol";
 import "../interfaces/IFeeProvider.sol";
+import "../tokenization/AToken.sol";
 
-import "../interfaces/ILendingPoolAddressesProvider.sol";
-import "../interfaces/ILendingPoolCore.sol";
-import "../interfaces/IAToken.sol";
+import "./LendingPoolCore.sol";
 
 /**
 * @title LendingPoolDataProvider contract
@@ -28,8 +22,8 @@ contract LendingPoolDataProvider is VersionedInitializable {
     using SafeMath for uint256;
     using WadRayMath for uint256;
 
-    ILendingPoolCore public core;
-    ILendingPoolAddressesProvider public addressesProvider;
+    LendingPoolCore public core;
+    LendingPoolAddressesProvider public addressesProvider;
 
     /**
     * @dev specifies the health factor threshold at which the user position is liquidated.
@@ -43,9 +37,9 @@ contract LendingPoolDataProvider is VersionedInitializable {
         return DATA_PROVIDER_REVISION;
     }
 
-    function initialize(address _addressesProvider) public initializer {
-        addressesProvider = ILendingPoolAddressesProvider(_addressesProvider);
-        core = ILendingPoolCore(addressesProvider.getLendingPoolCore());
+    function initialize(LendingPoolAddressesProvider _addressesProvider) public initializer {
+        addressesProvider = _addressesProvider;
+        core = LendingPoolCore(_addressesProvider.getLendingPoolCore());
     }
 
     /**
@@ -457,17 +451,17 @@ contract LendingPoolDataProvider is VersionedInitializable {
             bool usageAsCollateralEnabled
         )
     {
-        currentATokenBalance = IAToken(core.getReserveATokenAddress(_reserve)).balanceOf(_user);
-        InterestRateMode.Mode mode = core.getUserCurrentBorrowRateMode(_reserve, _user);
+        currentATokenBalance = AToken(core.getReserveATokenAddress(_reserve)).balanceOf(_user);
+        CoreLibrary.InterestRateMode mode = core.getUserCurrentBorrowRateMode(_reserve, _user);
         (principalBorrowBalance, currentBorrowBalance, ) = core.getUserBorrowBalances(
             _reserve,
             _user
         );
 
-        //default is 0, if mode == InterestRateMode.Mode.NONE
-        if (mode == InterestRateMode.Mode.STABLE) {
+        //default is 0, if mode == CoreLibrary.InterestRateMode.NONE
+        if (mode == CoreLibrary.InterestRateMode.STABLE) {
             borrowRate = core.getUserCurrentStableBorrowRate(_reserve, _user);
-        } else if (mode == InterestRateMode.Mode.VARIABLE) {
+        } else if (mode == CoreLibrary.InterestRateMode.VARIABLE) {
             borrowRate = core.getReserveCurrentVariableBorrowRate(_reserve);
         }
 

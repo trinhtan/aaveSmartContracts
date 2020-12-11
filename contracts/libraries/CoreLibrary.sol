@@ -1,8 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../openzeppelin-solidity/SafeMath.sol";
 import "./WadRayMath.sol";
-import "./InterestRateMode.sol";
 
 /**
 * @title CoreLibrary library
@@ -13,7 +12,7 @@ library CoreLibrary {
     using SafeMath for uint256;
     using WadRayMath for uint256;
 
-    // enum InterestRateMode {NONE, STABLE, VARIABLE}
+    enum InterestRateMode {NONE, STABLE, VARIABLE}
 
     uint256 internal constant SECONDS_PER_YEAR = 365 days;
 
