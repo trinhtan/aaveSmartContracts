@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "../libraries/openzeppelin-upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 
 import "./AddressStorage.sol";
-// import "../interfaces/ILendingPoolAddressesProvider.sol";
+import "../interfaces/ILendingPoolAddressesProvider.sol";
 
 /**
 * @title LendingPoolAddressesProvider contract
@@ -13,7 +13,7 @@ import "./AddressStorage.sol";
 * @author Aave
 **/
 
-contract LendingPoolAddressesProvider is Ownable, AddressStorage {
+contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider, AddressStorage {
     //events
     event LendingPoolUpdated(address indexed newAddress);
     event LendingPoolCoreUpdated(address indexed newAddress);
@@ -233,5 +233,6 @@ contract LendingPoolAddressesProvider is Ownable, AddressStorage {
         } else {
             proxy.upgradeToAndCall(_newAddress, params);
         }
+
     }
 }

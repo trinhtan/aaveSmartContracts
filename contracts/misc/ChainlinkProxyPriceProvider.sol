@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "../libraries/EthAddressLib.sol";
 
 import "../interfaces/IPriceOracleGetter.sol";
 import "../interfaces/IChainlinkAggregator.sol";
+import "../libraries/EthAddressLib.sol";
 
 /// @title ChainlinkProxyPriceProvider
 /// @author Aave

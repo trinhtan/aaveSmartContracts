@@ -1,27 +1,18 @@
 pragma solidity ^0.5.0;
 
-// import "../configuration/LendingPoolAddressesProvider.sol";
-// import "../configuration/LendingPoolParametersProvider.sol";
-// import "./LendingPoolCore.sol";
-// import "./LendingPoolDataProvider.sol";
-// import "../tokenization/AToken.sol";
-// import "../libraries/CoreLibrary.sol";
-
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import "../libraries/openzeppelin-upgradeability/VersionedInitializable.sol";
+import "../configuration/LendingPoolAddressesProvider.sol";
+import "../configuration/LendingPoolParametersProvider.sol";
+import "../tokenization/AToken.sol";
+import "../libraries/CoreLibrary.sol";
 import "../libraries/WadRayMath.sol";
-import "../libraries/InterestRateMode.sol";
-
+import "./LendingPoolCore.sol";
+import "./LendingPoolDataProvider.sol";
 import "../interfaces/IPriceOracleGetter.sol";
-import "../interfaces/ILendingPoolAddressesProvider.sol";
-import "../interfaces/ILendingPoolParametersProvider.sol";
-import "../interfaces/ILendingPoolCore.sol";
-import "../interfaces/ILendingPoolDataProvider.sol";
-import "../interfaces/IAToken.sol";
-import "../interfaces/IFeeProvider.sol";
 
 /**
 * @title LendingPoolLiquidationManager contract
@@ -33,10 +24,10 @@ contract LendingPoolLiquidationManager is ReentrancyGuard, VersionedInitializabl
     using WadRayMath for uint256;
     using Address for address;
 
-    ILendingPoolAddressesProvider public addressesProvider;
-    ILendingPoolCore core;
-    ILendingPoolDataProvider dataProvider;
-    ILendingPoolParametersProvider parametersProvider;
+    LendingPoolAddressesProvider public addressesProvider;
+    LendingPoolCore core;
+    LendingPoolDataProvider dataProvider;
+    LendingPoolParametersProvider parametersProvider;
     IFeeProvider feeProvider;
     address ethereumAddress;
 
@@ -106,7 +97,7 @@ contract LendingPoolLiquidationManager is ReentrancyGuard, VersionedInitializabl
         uint256 originationFee;
         uint256 feeLiquidated;
         uint256 liquidatedCollateralForFee;
-        InterestRateMode.Mode borrowRateMode;
+        CoreLibrary.InterestRateMode borrowRateMode;
         uint256 userStableRate;
         bool isCollateralEnabled;
         bool healthFactorBelowThreshold;
@@ -246,7 +237,7 @@ contract LendingPoolLiquidationManager is ReentrancyGuard, VersionedInitializabl
             _receiveAToken
         );
 
-        IAToken collateralAtoken = IAToken(core.getReserveATokenAddress(_collateral));
+        AToken collateralAtoken = AToken(core.getReserveATokenAddress(_collateral));
 
         //if liquidator reclaims the aToken, he receives the equivalent atoken amount
         if (_receiveAToken) {
