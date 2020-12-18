@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
-// import "../libraries/CoreLibrary.sol";
-import "../libraries/InterestRateMode.sol";
+import "../libraries/CoreLibrary.sol";
 
 /**
 @title ILendingPoolAddressesProvider interface
@@ -64,7 +63,7 @@ contract ILendingPoolCore {
 
   function isUserAllowedToBorrowAtStable(address _reserve, address _user, uint256 _amount) external view returns (bool);
 
-  function updateStateOnBorrow(address _reserve, address _user, uint256 _amountBorrowed, uint256 _borrowFee, InterestRateMode.Mode _rateMode) external returns (uint256, uint256);
+  function updateStateOnBorrow(address _reserve, address _user, uint256 _amountBorrowed, uint256 _borrowFee, CoreLibrary.InterestRateMode _rateMode) external returns (uint256, uint256);
 
   function getUserBorrowBalances(address _reserve, address _user) public view returns (uint256, uint256, uint256);
 
@@ -74,9 +73,9 @@ contract ILendingPoolCore {
 
   function transferToFeeCollectionAddress(address _token, address _user, uint256 _amount, address _destination) external payable;
 
-  function getUserCurrentBorrowRateMode(address _reserve, address _user) public view returns (InterestRateMode.Mode);
+  function getUserCurrentBorrowRateMode(address _reserve, address _user) public view returns (CoreLibrary.InterestRateMode);
 
-  function updateStateOnSwapRate(address _reserve, address _user, uint256 _principalBorrowBalance, uint256 _compoundedBorrowBalance, uint256 _balanceIncrease, InterestRateMode.Mode _currentRateMode) external returns (InterestRateMode.Mode, uint256);
+  function updateStateOnSwapRate(address _reserve, address _user, uint256 _principalBorrowBalance, uint256 _compoundedBorrowBalance, uint256 _balanceIncrease, CoreLibrary.InterestRateMode _currentRateMode) external returns (CoreLibrary.InterestRateMode, uint256);
 
   function getUserCurrentStableBorrowRate(address _reserve, address _user) external view returns (uint256);
 

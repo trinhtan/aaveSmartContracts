@@ -6,16 +6,15 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../libraries/openzeppelin-upgradeability/VersionedInitializable.sol";
 
-import "../configuration/LendingPoolAddressesProvider.sol";
-import "../configuration/LendingPoolParametersProvider.sol";
-import "../tokenization/AToken.sol";
+import "../interfaces/ILendingPoolAddressesProvider.sol";
+import "../interfaces/ILendingPoolParametersProvider.sol";
+import "../interfaces/IAToken.sol";
 import "../libraries/CoreLibrary.sol";
 import "../libraries/WadRayMath.sol";
 import "../interfaces/IFeeProvider.sol";
 import "../flashloan/interfaces/IFlashLoanReceiver.sol";
-import "./LendingPoolCore.sol";
-import "./LendingPoolDataProvider.sol";
-import "./LendingPoolLiquidationManager.sol";
+import "../interfaces/ILendingPoolCore.sol";
+import "../interfaces/ILendingPoolDataProvider.sol";
 import "../libraries/EthAddressLib.sol";
 
 /**
@@ -29,10 +28,10 @@ contract LendingPool is ReentrancyGuard, VersionedInitializable {
     using WadRayMath for uint256;
     using Address for address;
 
-    LendingPoolAddressesProvider public addressesProvider;
-    LendingPoolCore public core;
-    LendingPoolDataProvider public dataProvider;
-    LendingPoolParametersProvider public parametersProvider;
+    ILendingPoolAddressesProvider public addressesProvider;
+    ILendingPoolCore public core;
+    ILendingPoolDataProvider public dataProvider;
+    ILendingPoolParametersProvider public parametersProvider;
     IFeeProvider feeProvider;
 
     /**
@@ -279,11 +278,11 @@ contract LendingPool is ReentrancyGuard, VersionedInitializable {
     * AddressesProvider.
     * @param _addressesProvider the address of the LendingPoolAddressesProvider registry
     **/
-    function initialize(LendingPoolAddressesProvider _addressesProvider) public initializer {
-        addressesProvider = _addressesProvider;
-        core = LendingPoolCore(addressesProvider.getLendingPoolCore());
-        dataProvider = LendingPoolDataProvider(addressesProvider.getLendingPoolDataProvider());
-        parametersProvider = LendingPoolParametersProvider(
+    function initialize(address _addressesProvider) public initializer {
+        addressesProvider = ILendingPoolAddressesProvider(_addressesProvider);
+        core = ILendingPoolCore(addressesProvider.getLendingPoolCore());
+        dataProvider = ILendingPoolDataProvider(addressesProvider.getLendingPoolDataProvider());
+        parametersProvider = ILendingPoolParametersProvider(
             addressesProvider.getLendingPoolParametersProvider()
         );
         feeProvider = IFeeProvider(addressesProvider.getFeeProvider());
@@ -304,7 +303,7 @@ contract LendingPool is ReentrancyGuard, VersionedInitializable {
         onlyUnfreezedReserve(_reserve)
         onlyAmountGreaterThanZero(_amount)
     {
-        AToken aToken = AToken(core.getReserveATokenAddress(_reserve));
+        IAToken aToken = IAToken(core.getReserveATokenAddress(_reserve));
 
         bool isFirstDeposit = aToken.balanceOf(msg.sender) == 0;
 
